@@ -8,7 +8,7 @@ locs.medial = 4;
 lwid = 0.2;
 lgap = 0.05;
 
-figure('Renderer','Painters');
+figure;
 hold on;
 for typei = 1:Settings.Global.Locs.ntracktypes
     plot(locs.(Settings.Global.Locs.possiblenames{typei})(1)*[1 1], [0 14], '-b');

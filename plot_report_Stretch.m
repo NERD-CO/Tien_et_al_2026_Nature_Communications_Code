@@ -68,66 +68,6 @@ normrates = normrates(sorti,:);
 sigofem = sigofem(sorti,:);
 sighilo = sighilo(sorti,:);
 
-%% Plot onset times of significant modulation
-posstarts = nan(nsig,1);
-negstarts = nan(nsig,1);
-for neui = 1:nsig
-    if any(sighilo(neui,:)==1)
-        posstarts(neui) = find(sighilo(neui,:)==1,1,'first');
-    end
-    if any(sighilo(neui,:)==-1)
-        negstarts(neui) = find(sighilo(neui,:)==-1,1,'first');
-    end
-end
-
-posstarts = posstarts(~isnan(posstarts));
-negstarts = negstarts(~isnan(negstarts));
-
-upos = unique(posstarts);
-uneg = unique(negstarts);
-
-pgroup = groupcounts(posstarts);
-ngroup = groupcounts(negstarts);
-
-nps = length(upos);
-nns = length(uneg);
-
-[posf,posxi] = ksdensity(posstarts,1:npt);
-[negf,negxi] = ksdensity(negstarts,1:npt);
-scaleposf = posf./max([posf negf]);
-scalenegf = negf./max([posf negf]);
-
-%% Plot offset times of significant modulation
-
-nsig = sum(sigi);
-posstops = nan(nsig,1);
-negstops = nan(nsig,1);
-for neui = 1:nsig
-    if any(sighilo(neui,:)==1)
-        posstops(neui) = find(sighilo(neui,:)==1,1,'last');
-    end
-    if any(sighilo(neui,:)==-1)
-        negstops(neui) = find(sighilo(neui,:)==-1,1,'last');
-    end
-end
-
-posstops = posstops(~isnan(posstops));
-negstops = negstops(~isnan(negstops));
-
-uposoff = unique(posstops);
-unegoff = unique(negstops);
-
-pgroupoff = groupcounts(posstops);
-ngroupoff = groupcounts(negstops);
-
-npsoff = length(uposoff);
-nnsoff = length(unegoff);
-
-[posfoff,posxioff] = ksdensity(posstops,1:npt);
-[negfoff,negxioff] = ksdensity(negstops,1:npt);
-scaleposfoff = posfoff./max([posfoff negfoff]);
-scalenegfoff = negfoff./max([posfoff negfoff]);
-
 % Do some stats!
 winsigofem = sigofem(:,periwin);
 winsighilo = sighilo(:,periwin);
@@ -190,11 +130,11 @@ R(alphi).inunits = inunits;
 [R(alphi).npeakmod, R(alphi).peakmodtime] = max(squeeze(sum(sigofem,1)));
 
 %% Make the fancy subplots
-figdims = [0 0 700 1000];
 
 % FR Bars plot
-figure('Position', figdims); clf; hold on;
-set(gcf, 'Renderer', 'painters');
+figure('Position', [10 10 700 1000]);
+clf;
+hold on;
 
 colormap gray
 
@@ -205,7 +145,6 @@ xticks([0.5, Settings.Stretch.nbef+0.5-Settings.Stretch.periwin, Settings.Stretc
 xticklabels({});
 
 xlim([0.5 plotx(end)+0.5]);
-xlim1 = xlim(gca);
 ylim([0.5 nsig+0.5]);
 ax = gca;
 ax.FontSize = 30;
@@ -213,7 +152,6 @@ set(gca, 'TickDir', 'out');
 yticks([]);
 yticklabels([]);
 xticklabels([]);
-yl = ylim;
 
 % Plot colored boxes around the significantly modulated timepoints
 for neui = 1:nsig
@@ -244,18 +182,11 @@ end
 
 set(gca,'TickLength',[0.035 0.01]);
 
-%% Stacked plots
-figure('Position', figdims); clf; hold on;
-
 % Speed
-sp1 = subplot(4,1,1); hold on;
+figure; clf; hold on;
 patch([plotx, fliplr(plotx)], [errdown, fliplr(errup)], 'k', 'FaceAlpha', 0.25, 'LineStyle', 'none');
 plot(meanspeed, '-k', 'LineWidth', 4);
 xticks([]);
-% ylim1 = ylim(gca);
-% ylim([0, ylim1(2)]);
-% STOPPP
-% yl = ylim;
 set(gca, 'TickDir', 'out');
 ax = gca;
 ax.FontSize = 30;
@@ -269,7 +200,7 @@ set(gca,'TickLength',[0.03 0.01]);
 set(gca, 'YAxisLocation', 'right');
 
 % Sigs
-sp2 = subplot(4,1,2); hold on;
+figure; clf; hold on;
 ntot = length(sigi);
 plot(sum(sigofem,1)./ntot, 'LineStyle', '-', 'LineWidth', 3, 'Marker', 'none', 'Color', 'black');
 plot(sum(sighilo==-1,1)./ntot, 'LineStyle', '-', 'LineWidth', 3, 'Marker', 'none', 'Color', 'cyan');
@@ -287,50 +218,76 @@ set(gca,'TickLength',[0.03 0.01]);
 yticklabels([]);
 set(gca,'YAxisLocation', 'right');
 
-% Starts - NotViolin, stacked
-tickwid = 0.4;
-tickhi = 1;
+% Find percentiles of modulation times
+ntot = length(sigi);
+timevec = -.395:.01:1.195;
+sigsum = squeeze(sum(sigofem,1));
+hisum = squeeze(sum(sighilo==1,1));
+losum = squeeze(sum(sighilo==-1,1));
 
-sp4 = subplot(4,1,3); hold on;
+sigsum = sigsum(periwin);
+hisum = hisum(periwin);
+losum = losum(periwin);
 
-for posi = 1:nps
-    patch(upos(posi)*ones(1,4)+(tickwid*pgroup(posi))*[-0.5 -0.5 0.5 0.5], tickhi*[0 0.5 0.5 0], 'r', 'EdgeColor', 'none')
+sigcdf = cumsum(sigsum./ntot);
+hicdf = cumsum(hisum./ntot);
+locdf = cumsum(losum./ntot);
+
+sigcdf = sigcdf./sigcdf(end);
+hicdf = hicdf./hicdf(end);
+locdf = locdf./locdf(end);
+
+sigtimes = [];
+hitimes = [];
+lotimes = [];
+for si = 1:length(sigsum)
+    sigtimes = [sigtimes; ones(sigsum(si),1)*timevec(si)];
+    hitimes = [hitimes; ones(hisum(si),1)*timevec(si)];
+    lotimes = [lotimes; ones(losum(si),1)*timevec(si)];
 end
-for negi = 1:nns
-    patch(uneg(negi)*ones(1,4)+(tickwid*ngroup(negi))*[-0.5 -0.5 0.5 0.5], tickhi*[-0.5 0 0 -0.5], 'c', 'EdgeColor', 'none')
-end
+medsig = median(sigtimes);
+medhi = median(hitimes);
+medlo = median(lotimes);
 
-plot(posxi, scaleposf + tickhi/2, 'r', 'LineWidth', 3);
-plot(posxi, scalenegf + tickhi/2, 'c', 'LineWidth', 3);
+figure; clf; hold on;
+axis square
 
-ylim([-tickhi/2, 1+tickhi/2]);
-xlim([0.5, npt+0.5]);
-xl = xlim;
-yl = ylim;
-xticks([]);
+startpctilesig = sum(sigtimes < 0)/numel(sigtimes);
+endpctilesig = sum(sigtimes < 0.8)/numel(sigtimes);
 
-axis off
+plot([timevec(1) timevec(end)], [0 1], '-', 'Color', [0.75 0.75 0.75], 'LineWidth', 2);
+plot([0.4 0.4], [0 1], '--', 'Color', [0.75 0.75 0.75]);
+plot([timevec(1) timevec(end)], [0.5 0.5], '--', 'Color', [0.75 0.75 0.75]);
 
-% Stops - NotViolin, stacked
-sp5 = subplot(4,1,4); hold on;
+stairs(timevec, sigcdf, '-k', 'LineWidth', 2);
+stairs(timevec, hicdf, '-r', 'LineWidth', 1);
+stairs(timevec, locdf, '-c', 'LineWidth', 1);
 
-for posi = 1:npsoff
-    patch(uposoff(posi)*ones(1,4)+(tickwid*pgroupoff(posi))*[-0.5 -0.5 0.5 0.5], tickhi*[0 0.5 0.5 0], 'r', 'EdgeColor', 'none')
-end
-for negi = 1:nnsoff
-    patch(unegoff(negi)*ones(1,4)+(tickwid*ngroupoff(negi))*[-0.5 -0.5 0.5 0.5], tickhi*[-0.5 0 0 -0.5], 'c', 'EdgeColor', 'none')
-end
+% Plot out the percentiles but just for allsig
+plot([medsig medsig], [0 0.5], '-', 'Color', 'k');
+plot([0 0], [0 startpctilesig], '-', 'Color', 'k');
+plot([-0.4 0], [startpctilesig startpctilesig], '-', 'Color', 'k');
+plot([0.8 0.8], [0 endpctilesig], '-', 'Color', 'k');
+plot([-0.4 0.8], [endpctilesig endpctilesig], '-', 'Color', 'k');
+xlim([-.4 1.2]);
+xticks([-.4 0 0.8 1.2]);
+xticklabels([]);
+yticks([0 startpctilesig 0.5 endpctilesig 1]);
+yticklabels([]);
+set(gca, 'XTickLabels', []);
+a = get(gca, 'XTickLabels');
+set(gca, 'XTickLabels', a, 'FontSize', 30);
+set(gca, 'TickDir', 'out');
+set(gca,'TickLength',[0.03 0.01]);
 
-plot(posxioff, scaleposfoff + tickhi/2, 'r', 'LineWidth', 3);
-plot(posxioff, scalenegfoff + tickhi/2, 'c', 'LineWidth', 3);
-
-ylim([-tickhi/2, 1+tickhi/2]);
-xlim([0.5, npt+0.5]);
-xl = xlim;
-yl = ylim;
-xticks([]);
-
-axis off
+R(alphi).startpctilesig = startpctilesig;
+R(alphi).endpctilesig = endpctilesig;
+R(alphi).medsig = medsig;
+R(alphi).medhi = medhi;
+R(alphi).medlo = medlo;
+R(alphi).psigtimes = signrank(sigtimes-0.4);
+R(alphi).phitimes = signrank(hitimes-0.4);
+R(alphi).plotimes = signrank(lotimes-0.4);
 
 %% now do locations
 % CHANGE THIS FOR RELATIVE OR ABSOLUTE DEPTH
@@ -372,9 +329,9 @@ for typei = 1:Settings.Global.Locs.ntracktypes
 end
 depthpvals = ranksum(allsigdepths,allnotsigdepths);
 
-% plot those badboys
+% plot them
 
-figure('Renderer','Painters');
+figure;
 hold on;
 for typei = 1:Settings.Global.Locs.ntracktypes
     thisloc = typei;

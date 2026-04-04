@@ -24,7 +24,7 @@ cutSettings.Stretch.naft = Settings.Stretch.naft-backcut;
 
 pltcols = 0.9*jet(8);
 
-figure('Renderer', 'painters');
+figure;
 clf;
 hold on;
 mfrs = nan(npt,ndirs);

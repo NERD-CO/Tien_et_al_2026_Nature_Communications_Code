@@ -2,7 +2,7 @@
 % "Neurons in human motor thalamus encode reach kinematics and positional
 % errors related to braking" by Tien et al, submitted to Nature 
 % Communications in 2025. See Readme.txt for more information about the
-% code
+% code. Updated 4/3/2026 to reflect revisions.
 
 % Input is the directory where "SpikesKinData.mat" is stored
 % These data are available at the following public repository:
@@ -10,10 +10,12 @@
 
 function Tien_et_al_2025_NatCom_Code(datadir)
 
-% Load the data
-disp('Loading SpikesKinData.mat');
-load([datadir '\SpikesKinData.mat']);
+warning('off', 'MATLAB:chckxy:IgnoreNaN');
+warning('off', 'MATLAB:interp1:NaNstrip');
 
+% Load (and optionally process) the VIM data
+disp('Loading VIM_SpikesKinData.mat');
+load([datadir '\VIM_SpikesKinData.mat']);
 ndat = length(Data);
 
 % Set this to true to recalculate the processed data fields, otherwise, the
@@ -87,6 +89,40 @@ else
     end
 end
 
+%%
+% Load (and optionally process) the STN data
+disp('Loading STN_SpikesKinData.mat');
+STN = load([datadir '\STN_SpikesKinData.mat']);
+stn_ndat = length(STN.Data);
+
+% Set this to true to recalculate the processed data fields, otherwise, the
+% precalculated data fields stored in "Data" will be used.
+recalculate = false;
+
+if recalculate
+    % Suppress NaN warning
+    warning('off', 'MATLAB:chckxy:IgnoreNaN');
+    for dati = 1:stn_ndat
+        disp(['Processing Session ' num2str(dati) ' out of ' num2str(stn_ndat)]);
+    
+        % get Realtime: mean firing rates (FRs) across reaches without time-stretching
+        STN_Realtime(dati) = get_Realtime(STN.Settings, STN.Data(dati));
+
+        STN_StretchBoot(dati) = get_StretchBoot(STN.Settings, STN.Data(dati));
+
+        % get Realtime Sig: significance testing for Realtime FRs
+        STN_RealtimeSig(dati) = get_RealtimeSig(STN.Settings, STN_Realtime(dati), STN_StretchBoot(dati));
+    end
+else
+    datnames = {'Realtime', 'StretchBoot', 'RealtimeSig'};
+    ndatnames = length(datnames);
+    for dati = 1:stn_ndat
+        for nami = 1:ndatnames
+            eval(['STN_' datnames{nami} '(dati) = STN.Data(dati).(datnames{nami});']);
+        end
+    end
+end
+
 %% Report recording information
 disp('');
 disp('***Subjects and Sessions***');
@@ -109,12 +145,18 @@ ngoodsess = Settings.Global.allnsess;
 
 screenednreachpersess = [];
 reachlens = [];
+reachdists = [];
 nunitspertrack = [];
 mfrs = [];
 ntargspersess = [];
 for si = 1:ndat
     screenednreachpersess = [screenednreachpersess; length(Data(si).Time.reachstarts)];
     reachlens = [reachlens; Data(si).Time.reachstops - Data(si).Time.reachstarts];
+
+    % Find start and stop positions
+    startpos = interp1(Data(si).Time.ktime, Data(si).Kin.SmoothG50.Pos, Data(si).Time.reachstarts, 'spline');
+    stoppos = interp1(Data(si).Time.ktime, Data(si).Kin.SmoothG50.Pos, Data(si).Time.reachstops, 'spline');
+    reachdists = [reachdists; sqrt(sum((stoppos-startpos).^2,2))/1000];
 
     nneu = size(Data(si).N.SpkID,1);
     for neui = 1:nneu
@@ -158,6 +200,9 @@ disp(['# reaches total post-outlier: ' num2str(sum(screenednreachpersess))]);
 % Reach duration mean/sd
 disp(['Reach duration (s): ' num2str(mean(reachlens)) ' p/m ' num2str(std(reachlens))]);
 
+% Reach span mean/sd
+disp(['Reach distance (m): ' num2str(mean(reachdists)) ' p/m ' num2str(std(reachdists))]);
+
 % How many isolated units? mean/sd per microelectrode recording?
 disp(['# of analyzed units: ' num2str(ntotsorted)]);
 
@@ -186,7 +231,7 @@ plot_DirMeanFRs(Settings, Data, Stretch, 51, 2);
 plot_DirMeanFRs(Settings, Data, Stretch, 63, 1);
 
 %% Plot Time-Stretched FRs with significance (Figure 3a-e), report peri-reach modulation results
-% Also plots recording locations of peri-reach modulated units (Extended Data Figure 5a,b)
+% Also plots recording locations of peri-reach modulated units (Extended Data Figure 6a,b)
 RStretch = plot_report_Stretch(Settings, Stretch, StretchSig);
 
 disp(' ');
@@ -200,34 +245,11 @@ disp(['# of peri-reach sig units: ' num2str(RStretch(alphi).nsig) '/' num2str(Se
 % How many samples were positive out of total mod samples, percentage?
 disp(['# of positive sig samples: ' num2str(RStretch(alphi).npossamples) '/' num2str(RStretch(alphi).nsigsamples) ' (' num2str(100*RStretch(alphi).npossamples/RStretch(alphi).nsigsamples) '%)']);
 
-% How many mod units had only positive, only negative or both? percentage?
-disp(['# only positive: ' num2str(sum(RStretch(alphi).onlypos)) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*sum(RStretch(alphi).onlypos)/RStretch(alphi).nsig) '%)']);
-disp(['# only negative: ' num2str(sum(RStretch(alphi).onlyneg)) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*sum(RStretch(alphi).onlyneg)/RStretch(alphi).nsig) '%)']);
-disp(['# positive and negative: ' num2str(sum(RStretch(alphi).posneg)) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*sum(RStretch(alphi).posneg)/RStretch(alphi).nsig) '%)']);
-
 % How many units modulated before reach start, percentage?
 disp(['# of units modulated before reach start: ' num2str(RStretch(alphi).segunits(1)) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*RStretch(alphi).segunits(1)/RStretch(alphi).nsig) '%)']);
 
 % How many peri-reach samples were before reach start?
 disp(['# of sig samples occuring before reach start: ' num2str(RStretch(alphi).segcount(1)) '/' num2str(RStretch(alphi).nsigsamples) ' (' num2str(100*RStretch(alphi).segcount(1)/RStretch(alphi).nsigsamples) '%)']);
-
-% How many units modulated during reach, percentage?
-disp(['# of units modulated during reach: ' num2str(RStretch(alphi).inunits) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*(RStretch(alphi).inunits)/RStretch(alphi).nsig) '%)']);
-
-% How many peri-reach samples were during reach?
-disp(['# of sig samples occuring during reach: ' num2str(RStretch(alphi).incount) '/' num2str(RStretch(alphi).nsigsamples) ' (' num2str(100*RStretch(alphi).incount/RStretch(alphi).nsigsamples) '%)']);
-
-% How many units modulated 1st half of reach, percentage?
-disp(['# of units modulated 1st half of reach: ' num2str(RStretch(alphi).segunits(2)) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*RStretch(alphi).segunits(2)/RStretch(alphi).nsig) '%)']);
-
-% How many peri-reach samples were 1st half of reach?
-disp(['# of sig samples occuring 1st half of reach: ' num2str(RStretch(alphi).segcount(2)) '/' num2str(RStretch(alphi).nsigsamples) ' (' num2str(100*RStretch(alphi).segcount(2)/RStretch(alphi).nsigsamples) '%)']);
-
-% How many units modulated 2nd half of reach, percentage?
-disp(['# of units modulated 2nd half of reach: ' num2str(RStretch(alphi).segunits(3)) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*RStretch(alphi).segunits(3)/RStretch(alphi).nsig) '%)']);
-
-% How many peri-reach samples were 2nd half of reach?
-disp(['# of sig samples occuring 2nd half of reach: ' num2str(RStretch(alphi).segcount(3)) '/' num2str(RStretch(alphi).nsigsamples) ' (' num2str(100*RStretch(alphi).segcount(3)/RStretch(alphi).nsigsamples) '%)']);
 
 % How many units modulated after reach end, percentage?
 disp(['# of units modulated after reach end: ' num2str(RStretch(alphi).segunits(4)) '/' num2str(RStretch(alphi).nsig) ' (' num2str(100*RStretch(alphi).segunits(4)/RStretch(alphi).nsig) '%)']);
@@ -235,27 +257,23 @@ disp(['# of units modulated after reach end: ' num2str(RStretch(alphi).segunits(
 % How many peri-reach samples were after reach end?
 disp(['# of sig samples occuring after reach end: ' num2str(RStretch(alphi).segcount(4)) '/' num2str(RStretch(alphi).nsigsamples) ' (' num2str(100*RStretch(alphi).segcount(4)/RStretch(alphi).nsigsamples) '%)']);
 
-% p-value reach vs not
-disp(['ChiSq p-value inreach vs. outreach: ' num2str(RStretch(alphi).inoutchip)]);
-
-% p-value first half vs. second half
-disp(['ChiSq p-value 1st half vs. 2nd half of reach: ' num2str(RStretch(alphi).pairchip(RStretch(alphi).segpairs(:,1)==2 & RStretch(alphi).segpairs(:,2)==3))]);
-
-% Within the reach, how many peri-reach significant samples were in the first and second half?
-disp(['% of sig reach samples in first half of reach: ' num2str(100*RStretch(alphi).segcount(2)/RStretch(alphi).incount) '%']);
-disp(['% of sig reach samples in second half of reach: ' num2str(100*RStretch(alphi).segcount(3)/RStretch(alphi).incount) '%']);
-
 % p-value pre-reach vs. post-reach
 disp(['ChiSq p-value pre-reach vs. post-reach: ' num2str(RStretch(alphi).pairchip(RStretch(alphi).segpairs(:,1)==1 & RStretch(alphi).segpairs(:,2)==4))]);
 
 % time and how many sig mod at peak
 disp(['Max concurrent modulated: ' num2str(RStretch(alphi).npeakmod) ' at sample ' num2str(RStretch(alphi).peakmodtime)])
 
+% median time of modulation
+disp(['Median time of modulation: ' num2str(RStretch(alphi).medsig) ' s on average (0.4 s is the middle of the reach on average).']);
+
+% p-value median > mid
+disp(['Wilcoxon rank sum p-value (median time of modulation > 0.4): ' num2str(RStretch(alphi).psigtimes)]);
+
 %% Plot a spatial firing rate map (Figure 4a)
 plot_PCRF(Settings, Data, RegressionBuffer, 6, 1, 15)
 
 %% Plot Directional tuning (Figure 4b,c), report directional tuning results
-% Also plots recording locations of directionally tuned units (Extended Data Figure 5c,d)
+% Also plots recording locations of directionally tuned units (Extended Data Figure 6c,d)
 RDir = plot_report_Directionality(Settings, Directionality);
 
 disp(' ');
@@ -313,7 +331,7 @@ disp(['% of sig reach samples in second half of reach: ' num2str(100*RDir(alphi)
 disp(['ChiSq p-value pre-reach vs. post-reach: ' num2str(RDir(alphi).pairchip(RDir(alphi).segpairs(:,1)==1 & RDir(alphi).segpairs(:,2)==4))]);
 
 %% Plot and report regression results (Figure 5a-h)
-% Also plots recording locations of kinematic encoding units (Extended Data Figure 5e,f)
+% Also plots recording locations of kinematic encoding units (Extended Data Figure 6e,f)
 RReg = plot_report_ShapLag(Settings, RegressionBuffer, Lag, LagSig, Shap);
 
 disp(' ');
@@ -339,9 +357,31 @@ disp(['Mean Adj Rsq Increase when adding error terms: ' num2str(mean(RReg(alphi)
 %% Plot peri-reach FRs without time-stretching (Extended Data Figures 1 and 2)
 plot_Realtime(Settings, Realtime, RealtimeSig);
 
-%% Plot results from reach start vs. reach end windowed regressions (Extended Data Figure 3)
+%% Plot and report comparison of VIM and STN modulation timing relative to peak speed (Extended Data Figure 3)
+RVS = plot_report_VIMvsSTN(Settings, Realtime, RealtimeSig, STN.Settings, STN_Realtime, STN_RealtimeSig);
+
+disp(' ');
+disp(['VIM n sig: ' num2str(RVS.vimanysig) '/' num2str(RVS.vimnall) ' (' num2str(100*RVS.vimpctsig) '%)']);
+disp(['STN n sig: ' num2str(RVS.stnanysig) '/' num2str(RVS.stnnall) ' (' num2str(100*RVS.stnpctsig) '%)']);
+disp(['STN median: ' num2str(RVS.mstn)]);
+disp(['VIM median: ' num2str(RVS.mvim)]);
+disp(['Wilcoxon Rank Sum p, median diffs: ' num2str(RVS.pVSRankSum)]);
+disp(['STN signrank, median < 0: ' num2str(signrank(RVS.pSTNSignRank))]);
+disp(['VIM signrank, median > 0: ' num2str(signrank(RVS.pVIMSignRank))]);
+
+%% Plot results from reach start vs. reach end windowed regressions (Extended Data Figure 4)
 plot_FBL(Settings, Data, FBRegressionBuffer, RegressionBuffer, FBL, FBLSig)
 
-%% Plot duration dependency of peri-reach modulation and directional tuning (Extended Data Figure 4)
+%% Plot duration dependency of peri-reach modulation and directional tuning (Extended Data Figure 5)
 plot_Cutoffs_Reach(Settings, StretchSig);
 plot_Cutoffs_Directionality(Settings, Directionality);
+
+%% Plot localization results relative to image-based VIM segmentation (Extended Data Figure 7b)
+plot_SegmentationLocalization([datadir '\S.10.L_localization.mat']);
+
+%% Plot and report locations of units relative to segmentations summary (Extended Data Figure 7c)
+plot_invim_dists(Settings)
+
+%% Plot and report functional properties of units based on localization
+% relative to VIM segmentations (Extended Data Figure 7d,e
+plot_report_CompareInVim([datadir '\InVimCompare.mat'])

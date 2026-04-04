@@ -30,7 +30,7 @@ holdi = rdirs(B.Reachnum.Hold);
 holdi(R.Reach.outreach(B.Reachnum.Hold) == 0) = 0;
 allreachtargi(fullholdi) = holdi;
 
-figure('Renderer', 'painters');
+figure;
 clf;
 hold on;
 

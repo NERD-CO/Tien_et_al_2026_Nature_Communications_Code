@@ -29,7 +29,7 @@ numdir = udir;
 ndir = length(udir);
 
 plottick = 1;
-figure('Renderer', 'painters'); hold on;
+figure; hold on;
 
 for diri = 1:ndir
     thisdir = find(rdirs == udir(diri));

@@ -1,6 +1,6 @@
-Description of the publicly available code associated with the manuscript: "Neurons in human motor thalamus encode reach kinematics and positional error related to braking" by Tien et al, submitted to Nature Communications March 2025. Hosted at https://github.com/NERD-CO/Tien_et_al_2025_NatCom_Code
+Description of the publicly available code associated with the manuscript: "Neurons in human motor thalamus encode reach kinematics and positional error related to braking" by Tien et al, submitted to Nature Communications March 2025, with revisions submitted April 2025. Hosted at https://github.com/NERD-CO/Tien_et_al_2025_NatCom_Code
 
-Rex Tien - March 27, 2025
+Rex Tien - Updated April 3, 2026 to reflect submitted revisions
 Rex.Tien@cuanschutz.edu
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -9,7 +9,7 @@ This code is intended to reproduce all results and figures in the manuscript. Th
 
 Dependencies: MATLAB with parallel computing toolbox.
 
-This code has been tested with MATLAB R2022a on a system running Windows 11 with 32GB RAM. It should work with any recent MATLAB release on Windows.
+This code has been tested with MATLAB R2025b on a system running Windows 11 with 32GB RAM. It should work with any recent MATLAB release on Windows.
 
 Instructions:
 To run the code reproducing all results and figures:
@@ -77,21 +77,29 @@ Plotting functions:
 
 "plot_DirMeanFRs.m" - plots a unit's peri-reach firing rates aligned to peak speed, colored by reach direction (as in Figure 2d,e).
 
-"plot_report_Stretch.m" - plots peri-reach trial-averaged FRs and peri-reach modulation significance results (Figure 3). Also plots recording locations of significant peri-reach modulated units (Extended Data Figure 5a,b).
+"plot_report_Stretch.m" - plots peri-reach trial-averaged FRs and peri-reach modulation significance results (Figure 3). Also plots recording locations of significant peri-reach modulated units (Extended Data Figure 6a,b).
 
 "plot_PCRF.m" - plots a unit's spatial activation map (as in Figure 4a).
 
-"plot_report_Directionality.m" - plots significant peri-reach directional tuning results (Figure 4b,c). Also plots recording locations of significant peri-reach directionally tuned units (Extended Data Figure 5c,d).
+"plot_report_Directionality.m" - plots significant peri-reach directional tuning results (Figure 4b,c). Also plots recording locations of significant peri-reach directionally tuned units (Extended Data Figure 6c,d).
 
-"plot_report_ShapLag.m" - plots regression results (Figure 5). Also plots recording locations of significant kinematic encoding units (Extended Data Figure 5e,f).
+"plot_report_ShapLag.m" - plots regression results (Figure 5). Also plots recording locations of significant kinematic encoding units (Extended Data Figure 6e,f).
 
 "plot_Realtime.m" - plots peri-reach and peri-event trial-averaged realtime FRs and realtime peri-reach modulation significance results (Extended Data Figures 1 and 2).
 
-"plot_FBL.m" - plots start and end windowed regression results (Extended Data Figure 3).
+"plot_FBL.m" - plots start and end windowed regression results (Extended Data Figure 4).
 
-"plot_Cutoffs_Reach.m" - plots the prevalence of peri-reach modulation significance for different required significance durations (Extended Data Figure 4a).
+"plot_Cutoffs_Reach.m" - plots the prevalence of peri-reach modulation significance for different required significance durations (Extended Data Figure 5a).
 
-"plot_Cutoffs_Directionality.m" - plots the prevalence of peri-reach directional tuning significance for different required significance durations (Extended Data Figure 4b).
+"plot_Cutoffs_Directionality.m" - plots the prevalence of peri-reach directional tuning significance for different required significance durations (Extended Data Figure 5b).
+
+"plot_report_VIMvsSTN.m" - plots comparison of modulation timing relative to peak reach speed between VIM and STN neural populations (Extended Data Figure 3)
+
+"plot_SegmentationLocalization.m" - plots a single VIM segmentation with recording locations for session S.10.L (Extended Data Figure 7b)
+
+"plot_invim_dists.m" - plots histogram of recording location distances relative to VIM segmentations (Extended Data Figure 7c)
+
+"plot_report_CompareInVim.m" plots timing of unit modulation and prevalence of functional properties of units categorized by location relative to VIM segmentations (Extended Data Figure 7de)
 
 
 Utility functions:

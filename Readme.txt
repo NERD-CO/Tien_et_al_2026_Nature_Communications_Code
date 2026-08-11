@@ -1,4 +1,4 @@
-Description of the publicly available code associated with the manuscript: "Neurons in human motor thalamus encode reach kinematics and positional error related to braking" by Tien et al, submitted to Nature Communications March 2025, with revisions submitted April 2025. Hosted at https://github.com/NERD-CO/Tien_et_al_2025_NatCom_Code
+Description of the publicly available code associated with the manuscript: "Neurons in human motor thalamus encode reach kinematics and positional error related to braking" by Tien et al, submitted to Nature Communications March 2025, with revisions submitted April 2026. Hosted at https://github.com/NERD-CO/Tien_et_al_2026_Nature_Communications_Code
 
 Rex Tien - Updated April 3, 2026 to reflect submitted revisions
 Rex.Tien@cuanschutz.edu

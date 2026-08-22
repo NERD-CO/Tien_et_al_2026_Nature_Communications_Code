@@ -1,11 +1,11 @@
 Description of the publicly available code associated with the manuscript: "Neurons in human motor thalamus encode reach kinematics and positional error related to braking" by Tien et al, submitted to Nature Communications March 2025, with revisions submitted April 2026. Hosted at https://github.com/NERD-CO/Tien_et_al_2026_Nature_Communications_Code
 
-Rex Tien - Updated April 3, 2026 to reflect submitted revisions
+Rex Tien - Updated August 22, 2026 to reflect submitted revisions
 Rex.Tien@cuanschutz.edu
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This code is intended to reproduce all results and figures in the manuscript. The code operates on the publicly available data hosted at: https://osf.io/3unka/?view_only=4e7e0d5cee0e4dd9a567fa637644b3b9
+This code is intended to reproduce all results and figures in the manuscript. The code operates on the publicly available data hosted at: https://osf.io/3unka/overview?view_only=4e7e0d5cee0e4dd9a567fa637644b3b9
 
 Dependencies: MATLAB with parallel computing toolbox.
 
@@ -13,11 +13,11 @@ This code has been tested with MATLAB R2025b on a system running Windows 11 with
 
 Instructions:
 To run the code reproducing all results and figures:
-1. Download the data available at: https://osf.io/3unka/?view_only=4e7e0d5cee0e4dd9a567fa637644b3b9.
-2. Run the main function "Tien_et_al_2025_NatCom_Code.m" with the directory where you downloaded the data as input.
-	For example, in MATLAB, run: Tien_et_al_2025_NatCom_Code('C:\Users\username\Downloads\Data')
+1. Download the data available at: https://osf.io/3unka/overview?view_only=4e7e0d5cee0e4dd9a567fa637644b3b9.
+2. Run the main function "Tien_et_al_2026_NatCom_Code.m" with the directory where you downloaded the data as input.
+	For example, in MATLAB, run: Tien_et_al_2026_NatCom_Code('C:\Users\username\Downloads\Data')
 
-The computationally intensive processing steps have been pre-executed for speed. By default the main function will load the precalculated data and report the results and produce the plots from the manuscript. In order to re-execute the processing steps, edit the file "Tien_et_al_2025_NatCom_Code.m" line 21 to set "recalculate" to "true."
+The computationally intensive processing steps have been pre-executed for speed. By default the main function will load the precalculated data and report the results and produce the plots from the manuscript. In order to re-execute the processing steps, edit the file "Tien_et_al_2026_NatCom_Code.m" line 21 to set "recalculate" to "true."
 
 The processed data fields "StretchBoot," "LagBoot," and "FBLBoot" may not reproduce exactly due to random number generator usage.
 
